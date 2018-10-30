@@ -8,6 +8,11 @@ variable google_network {
   type        = "string"
 }
 
+variable google_cidr_block {
+  description = "Google subnet"
+  type        = "string"
+}
+
 variable vpn_remote_cidr_block {
   description = "Heroku Private Space dyno network"
   type        = "string"

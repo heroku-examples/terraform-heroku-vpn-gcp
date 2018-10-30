@@ -1,4 +1,5 @@
 provider "google" {
+  version = "~> 1.19"
   region = "${var.google_region}"
 }
 
@@ -12,7 +13,7 @@ module "heroku_vpn_gcp" {
   google_network    = "${var.google_network}"
   google_cidr_block = "${var.google_cidr_block}"
 
-  vpn_remote_cidr_block       = ["${heroku_space_vpn_connection.google.space_cidr_block}"]
+  vpn_remote_cidr_block       = "${heroku_space_vpn_connection.google.space_cidr_block}"
   vpn_ike_version             = "${heroku_space_vpn_connection.google.ike_version}"
   vpn_tunnel_ip_0             = "${heroku_space_vpn_connection.google.tunnels.0.ip}"
   vpn_tunnel_pre_shared_key_0 = "${heroku_space_vpn_connection.google.tunnels.0.pre_shared_key}"

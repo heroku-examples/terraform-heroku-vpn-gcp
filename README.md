@@ -26,7 +26,9 @@ A single [Terraform config](https://www.terraform.io/docs/configuration/index.ht
   * install [command-line tools (CLI)](https://toolbelt.heroku.com)
   * [an account](https://signup.heroku.com) (must be a member of an Enterprise account for access to Private Spaces)
   * [a team](https://devcenter.heroku.com/articles/heroku-teams) in the Enterprise account
-* [GCP]()
+* [Google Cloud](https://cloud.google.com/)
+  * install [Cloud SDK](https://cloud.google.com/sdk/)
+  * [an account](https://console.cloud.google.com/freetrial)
 * install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * install [Terraform](https://terraform.io)
 
@@ -50,7 +52,7 @@ Ensure the [requirements](#user-content-requirements) are met, then,
 1. `cd examples/heroku-private-space`
 1. `terraform init`
 1. Optionally, import an existing Private Space
-    * `terraform import heroku_space.default <ID>`
+    * `terraform import heroku_space.default <Name or ID>`
     * When running subsequent Terraform commands, the `heroku_enterprise_team`, `heroku_private_space`, & `heroku_private_space_region` input variables must match the existing Private Space's values
 1. Then, apply the config with your own top-level config values:
 
