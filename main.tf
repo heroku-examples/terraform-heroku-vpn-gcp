@@ -1,15 +1,15 @@
 resource "google_compute_network" "default" {
   name                    = "${var.google_network}"
   description             = "terraform-heroku-vpn-gcp"
-  auto_create_subnetworks = "false"
+  auto_create_subnetworks = "${var.google_network_auto_create_subnetworks}"
 }
 
 resource "google_compute_subnetwork" "default" {
-  name                     = "${var.google_network}-subnet"
-  ip_cidr_range            = "${var.google_cidr_block}"
+  name                     = "${var.google_subnetwork}"
+  ip_cidr_range            = "${var.google_subnetwork_cidr_block}"
   network                  = "${google_compute_network.default.self_link}"
   region                   = "${var.google_region}"
-  private_ip_google_access = false
+  private_ip_google_access = "${var.google_subnetwork_private_ip_access}"
 }
 
 resource "google_compute_firewall" "allow-ssh" {

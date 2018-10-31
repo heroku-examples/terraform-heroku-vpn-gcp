@@ -1,19 +1,17 @@
-# Heroku Private Space VPN connection to Google Compute Platform using Terraform
-
-🔬🚧 **Work in Progress.** Not ready for general usage.
+# Heroku Private Space VPN connection to Google Cloud Platform using Terraform
 
 A Heroku [Private Space](https://devcenter.heroku.com/articles/private-spaces) provides a container for [internally routed apps](https://devcenter.heroku.com/articles/internal-routing) that are only accessible within its private network.
 
 [Private Space VPN Connections](https://devcenter.heroku.com/articles/private-space-vpn-connection) provide site-to-site interconnection with [Google Cloud VPN](https://cloud.google.com/vpn/docs/concepts/overview).
 
-Apps on either side of the VPN connection may access apps on the other side other by DNS name via the established encrypted network tunnel.
+Apps on either side of the VPN connection may access apps on the other side other by DNS name via the established IPSec network tunnels. Two tunnels provide redundancy to ensure uninterrupted network connectivity.
 
-A single [Terraform config](https://www.terraform.io/docs/configuration/index.html) embodies the complete integration between Heroku and Google Compute Platform, enabling high-level collaboration, repeatability, test-ability, and change management.
+A single [Terraform config](https://www.terraform.io/docs/configuration/index.html) embodies the complete integration between Heroku and Google Cloud Platform, enabling high-level collaboration, repeatability, test-ability, and change management.
 
 ## Primary components
 
 * [Heroku](https://www.heroku.com/home)
-* [Google Compute Platform](https://cloud.google.com/)
+* [Google Cloud Platform](https://cloud.google.com/)
 * [Terraform](https://terraform.io)
 
 ## Challenges & Caveats
@@ -45,15 +43,22 @@ Ensure the [requirements](#user-content-requirements) are met, then,
 1. Set Heroku API key
     1. `heroku authorizations:create -d terraform-heroku-vpn-gcp`
     2. `export HEROKU_API_KEY=<"Token" value from the authorization>`
-1. Login & configure Google
+1. Login & configure Google Cloud
     1. `gcloud init`
     1. `gcloud auth application-default login`
     1. `export GOOGLE_PROJECT=<project-name>`
 1. `cd examples/heroku-private-space`
 1. `terraform init`
-1. Optionally, import an existing Private Space
-    * `terraform import heroku_space.default <Name or ID>`
-    * When running subsequent Terraform commands, the `heroku_enterprise_team`, `heroku_private_space`, & `heroku_private_space_region` input variables must match the existing Private Space's values
+1. Optionally, import any existing resources:
+    * **Heroku Private Space**
+      * `terraform import heroku_space.default <Name or ID>`
+      * When running subsequent Terraform commands, the `heroku_enterprise_team`, `heroku_private_space`, & `heroku_private_space_region` input variables must match the existing Private Space's values
+    * **Google VPC Network**
+      * `terraform import google_compute_network.default <Name>`
+      * When running subsequent Terraform commands, the `google_network` & `google_network_auto_create_subnetworks` input variable must match the existing network's values
+    * **Google VPC Subnetwork**
+      * `terraform import google_compute_subnetwork.default <Name>`
+      * When running subsequent Terraform commands, the `google_subnetwork`, `google_subnetwork_cidr_block`, `google_subnetwork_private_ip_access`, & `google_region` input variables must match the existing subnet's values
 1. Then, apply the config with your own top-level config values:
 
     ```bash

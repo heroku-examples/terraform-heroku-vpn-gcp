@@ -1,6 +1,6 @@
 provider "google" {
   version = "~> 1.19"
-  region = "${var.google_region}"
+  region  = "${var.google_region}"
 }
 
 provider "heroku" {
@@ -8,11 +8,17 @@ provider "heroku" {
 }
 
 module "heroku_vpn_gcp" {
-  source            = "../../"
-  google_region     = "${var.google_region}"
-  google_network    = "${var.google_network}"
-  google_cidr_block = "${var.google_cidr_block}"
+  source = "../../"
 
+  // Google Cloud Platform config
+  google_region                          = "${var.google_region}"
+  google_network                         = "${var.google_network}"
+  google_network_auto_create_subnetworks = "${var.google_network_auto_create_subnetworks}"
+  google_subnetwork                      = "${var.google_subnetwork}"
+  google_subnetwork_cidr_block           = "${var.google_subnetwork_cidr_block}"
+  google_subnetwork_private_ip_access    = "${var.google_subnetwork_private_ip_access}"
+
+  // Heroku Private Space config
   vpn_remote_cidr_block       = "${heroku_space_vpn_connection.google.space_cidr_block}"
   vpn_ike_version             = "${heroku_space_vpn_connection.google.ike_version}"
   vpn_tunnel_ip_0             = "${heroku_space_vpn_connection.google.tunnels.0.ip}"
