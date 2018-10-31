@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+# Provision a Google Compute Engine instance to launch a Node.js app
+#
+# Script adapted from Google Cloud docs
+# https://cloud.google.com/nodejs/docs/tutorials/bookshelf-on-compute-engine
+
+# Output each shell input line as it's executed
+set -v
+# Fail immediately on non-zero exit code.
+set -e
+# Fail immediately on non-zero exit code within a pipeline.
+set -o pipefail
+# Fail on undeclared variables.
+set -u
+
+NODE_VERSION="${NODE_VERSION:-v10.13.0}"
+NODE_APP_GIT_URL="${NODE_APP_GIT_URL:-https://github.com/mars/peer-health-checker}"
+
+PORT="${PORT:-8080}"
+PRIVATE_IP=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip" -H "Metadata-Flavor: Google")
+
+HEALTH_CHECKER_SELF_URL="http://${PRIVATE_IP}:${PORT}"
+HEALTH_CHECKER_PEER_URL=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/attributes/HEALTH_CHECKER_PEER_URL" -H "Metadata-Flavor: Google")
+
+# Install logging monitor. The monitor will automatically pick up logs sent to
+# syslog.
+curl -s "https://storage.googleapis.com/signals-agents/logging/google-fluentd-install.sh" | bash
+service google-fluentd restart &
+
+# Install dependencies from apt
+apt-get update
+apt-get install -yq ca-certificates git nodejs build-essential supervisor
+
+# Install nodejs
+mkdir /opt/nodejs
+curl https://nodejs.org/dist/v10.13.0/node-v10.13.0-linux-x64.tar.gz | tar xvzf - -C /opt/nodejs --strip-components=1
+ln -s /opt/nodejs/bin/node /usr/bin/node
+ln -s /opt/nodejs/bin/npm /usr/bin/npm
+
+# Get the application source code from the Google Cloud Repository.
+# git requires $HOME and it's not set during the startup script.
+export HOME=/root
+git clone "${NODE_APP_GIT_URL}" /opt/app
+
+# Install app dependencies
+cd /opt/app
+npm install
+npm run build
+
+# Create a nodeapp user. The application will run as this user.
+useradd -m -d /home/nodeapp nodeapp
+chown -R nodeapp:nodeapp /opt/app
+
+# Configure supervisor to run the node app.
+cat >/etc/supervisor/conf.d/node-app.conf <<EOF
+[program:nodeapp]
+directory=/opt/app
+command=npm start
+autostart=true
+autorestart=true
+user=nodeapp
+environment=HOME="/home/nodeapp",USER="nodeapp",NODE_ENV="production",PORT="$PORT",HEALTH_CHECKER_SELF_URL="$HEALTH_CHECKER_SELF_URL",HEALTH_CHECKER_PEER_URL="$HEALTH_CHECKER_PEER_URL",
+stdout_logfile=syslog
+stderr_logfile=syslog
+EOF
+
+supervisorctl reread
+supervisorctl update
+
+# Application should now be running under supervisor

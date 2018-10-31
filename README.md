@@ -32,6 +32,35 @@ A single [Terraform config](https://www.terraform.io/docs/configuration/index.ht
 
 ## Usage
 
+### As a module
+
+Use this module from another Terraform configuration to provision the Google Cloud resources for Private Spaces VPN:
+
+```hcl
+provider "google" {
+  version = "~> 1.19"
+  region  = "${var.google_region}"
+}
+
+provider "heroku" {
+  version = "~> 1.5"
+}
+
+module "heroku_vpn_gcp" {
+  source = "github.com/heroku-examples/terraform-heroku-vpn-gcp"
+
+  providers = {
+    google = "google"
+  }
+
+  // …input variables
+}
+```
+
+👓 See [examples](examples/) for usage details.
+
+### Complete example
+
 Ensure the [requirements](#user-content-requirements) are met, then,
 
 1. Clone this repo:
