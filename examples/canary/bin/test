@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Acceptance test for terraform-heroku-vpn-gcp module.
+# Applies the config, tests that the canary app is alive, then destroys it all.
+#
+# ## Requires
+#   * curl
+#   * jq
+#   * terraform (0.11.8)
+#
+# ## Usage
+#
+# Setup Heroku auth, Google auth, and input variables (see README)
+#
+# ```bash
+# cd examples/canary
+# ./bin/test
+# ```
+
+# Fail on undeclared variables.
+set -u
+
+# Initialize local Terraform
+echo "▶️  terraform init"
+terraform init
+if [ ! "$?" = "0" ]
+then
+  echo "terraform init failed"
+  exit 2
+fi
+
+# Attempt Terraform apply until successful (limited to five, one-minute retries)
+echo "▶️  terraform apply"
+apply_count=1
+until terraform apply -auto-approve -input=false -parallelism=4
+do
+  if [ "$apply_count" -eq "6" ]; then
+    echo "❌ terraform apply failed (${apply_count}/5), giving up after five 30-second retries"
+    exit 2
+  else
+    echo "⚠️ terraform apply failed (${apply_count}/5), retrying in 30-seconds"
+    sleep 30
+    apply_count=$[$apply_count +1]
+  fi
+done
+
+health_public_url=$(terraform output health_public_url)
+
+echo "▶️  health check: ${health_public_url}/health"
+health_response_body=$(curl -sS "${health_public_url}/health")
+echo $health_response_body | jq .
+health_peer_status=$(echo $health_response_body | jq '.["peer-status"]')
+health_duplex_status=$(echo $health_response_body | jq '.["duplex-status"]')
+
+# Attempt Terraform destroy until successful (limited retries)
+echo "▶️  terraform destroy"
+destroy_count=1
+until terraform destroy -auto-approve -input=false -parallelism=4
+do
+  if [ "$destroy_count" -eq "6" ]; then
+    echo "❌  terraform destroy failed (${destroy_count}/5), giving up after five 30-second retries"
+    exit 2
+  else
+    echo "⚠️  terraform destroy failed (${destroy_count}/5), retrying in 30-seconds"
+    sleep 30
+    destroy_count=$[$destroy_count +1]
+  fi
+done
+
+if [ ! "$health_peer_status" = "200" ]
+then
+  echo "❌  test failure: peer connection was not successful (status $health_peer_status)"
+  exit 2
+fi
+
+if [ ! "$health_duplex_status" = "200" ]
+then
+  echo "❌  test failure: peer's connection to origin was not successful (status $health_duplex_status)"
+  exit 2
+fi
+
+echo "✅  test success"
+exit 0
