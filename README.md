@@ -1,5 +1,7 @@
 # Heroku Private Space VPN connection to Google Cloud Platform using Terraform
 
+[![Build Status](https://travis-ci.org/heroku-examples/terraform-heroku-vpn-gcp.svg?branch=master)](https://travis-ci.org/heroku-examples/terraform-heroku-vpn-gcp)
+
 A Heroku [Private Space](https://devcenter.heroku.com/articles/private-spaces) provides a container for [internally routed apps](https://devcenter.heroku.com/articles/internal-routing) that are only accessible within its private network.
 
 [Private Space VPN Connections](https://devcenter.heroku.com/articles/private-space-vpn-connection) provide site-to-site interconnection with [Google Cloud VPN](https://cloud.google.com/vpn/docs/concepts/overview).

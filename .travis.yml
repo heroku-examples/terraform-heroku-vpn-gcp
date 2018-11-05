@@ -1,0 +1,28 @@
+language: minimal
+
+addons:
+  apt:
+    packages:
+      - jq
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_a3bdffafedd4_key -iv $encrypted_a3bdffafedd4_iv -in heroku-pm-fc73e5bd21e8.json.enc -out "${HOME}/gcloud-secret.json" -d
+
+install:
+  - mkdir -p "$HOME/bin"
+  - curl -s -L "https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_amd64.zip" > "terraform-bin.zip"
+  - unzip -p "terraform-bin.zip" > "$HOME/bin/terraform"
+  - chmod +x "$HOME/bin/terraform"
+  - export PATH="$HOME/bin:$PATH"
+
+env:
+  global:
+    - GOOGLE_APPLICATION_CREDENTIALS="${HOME}/gcloud-secret.json"
+    - GOOGLE_PROJECT=heroku-pm-2
+    - TF_VAR_heroku_enterprise_team=heroku-cto
+    - TF_VAR_heroku_private_space=travisci-vpn-gcp
+    - TF_VAR_heroku_private_space_region=virginia
+    - TF_VAR_google_region=us-east4
+    - TF_VAR_google_compute_zone=us-east4-a
+
+script: cd examples/canary/ && ./bin/test
