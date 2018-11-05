@@ -30,7 +30,7 @@ service google-fluentd restart &
 
 # Install dependencies from apt
 apt-get update
-apt-get install -yq ca-certificates git nodejs build-essential supervisor
+apt-get install -yq ca-certificates git build-essential supervisor
 
 # Install nodejs
 mkdir /opt/nodejs
