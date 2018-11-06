@@ -68,6 +68,8 @@ resource "google_compute_instance" "health" {
   provisioner "local-exec" {
     command = "./bin/health-check http://${google_compute_instance.health.network_interface.0.access_config.0.nat_ip}:8080"
   }
+
+  depends_on = ["google_compute_firewall.health"]
 }
 
 resource "google_compute_firewall" "health" {
