@@ -17,11 +17,13 @@ install:
 
 env:
   global:
+    - RANDOM_SUFFIX="$RANDOM"
     - GOOGLE_APPLICATION_CREDENTIALS="${HOME}/gcloud-secret.json"
     - GOOGLE_PROJECT=heroku-pm-2
     - TF_VAR_heroku_enterprise_team=heroku-cto
-    - TF_VAR_heroku_private_space=travisci-vpn-gcp
+    - TF_VAR_heroku_private_space="ci-vpn-gcp-$RANDOM_SUFFIX"
     - TF_VAR_heroku_private_space_region=virginia
+    - TF_VAR_google_network="ci-vpn-heroku-$RANDOM_SUFFIX"
     - TF_VAR_google_region=us-east4
     - TF_VAR_google_compute_zone=us-east4-a
 

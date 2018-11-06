@@ -20,52 +20,67 @@
 # Fail on undeclared variables.
 set -u
 
-# Initialize local Terraform
-echo "▶️  terraform init"
-terraform init
-if [ ! "$?" = "0" ]
-then
-  echo "terraform init failed"
-  exit 2
-fi
-
-# Attempt Terraform apply until successful (limited to five, one-minute retries)
-echo "▶️  terraform apply"
-apply_count=1
-until terraform apply -auto-approve -input=false -parallelism=4
-do
-  if [ "$apply_count" -eq "6" ]; then
-    echo "❌ terraform apply failed (${apply_count}/5), giving up after five 30-second retries"
+# Function to initialize local Terraform
+terraform_init() {
+  echo "▶️  terraform init"
+  terraform init
+  if [ ! "$?" = "0" ]
+  then
+    echo "❌  terraform init failed"
     exit 2
-  else
-    echo "⚠️ terraform apply failed (${apply_count}/5), retrying in 30-seconds"
-    sleep 30
-    apply_count=$[$apply_count +1]
   fi
-done
+}
+
+# Function to attempt Terraform apply until successful (limited retries)
+terraform_apply() {
+  echo "▶️  terraform apply"
+  local apply_count=1
+  until terraform apply -auto-approve -input=false -parallelism=4
+  do
+    if [ "$apply_count" -eq "6" ]; then
+      echo "❌  terraform apply failed too many times, attempting clean-up"
+      terraform_destroy
+      echo "❌  terraform apply failed too many times, gave-up"
+      exit 2
+    else
+      echo "⚠️  terraform apply failed (${apply_count}/5), retrying in 30-seconds"
+      sleep 30
+      apply_count=$[$apply_count +1]
+    fi
+  done
+}
+
+# Function to attempt Terraform destroy until successful (limited retries)
+terraform_destroy() {
+  echo "▶️  terraform destroy"
+  local destroy_count=1
+  until terraform destroy -auto-approve -input=false -parallelism=4
+  do
+    if [ "$destroy_count" -eq "6" ]; then
+      echo "❌  terraform destroy failed too many times, so giving up"
+      echo "🗑  Manual clean-up of Heroku and Google Cloud resources may be required"
+      exit 2
+    else
+      echo "⚠️  terraform destroy failed (${destroy_count}/5), retrying in 30-seconds"
+      sleep 30
+      destroy_count=$[$destroy_count +1]
+    fi
+  done 
+}
+
+# Main test procedure
+terraform_init
+terraform_apply
 
 health_public_url=$(terraform output health_public_url)
-
 echo "▶️  health check: ${health_public_url}/health"
 health_response_body=$(curl -sS "${health_public_url}/health")
 echo $health_response_body | jq .
+# Read the JSON response for health check request statuses
 health_peer_status=$(echo $health_response_body | jq '.["peer-status"]')
 health_duplex_status=$(echo $health_response_body | jq '.["duplex-status"]')
 
-# Attempt Terraform destroy until successful (limited retries)
-echo "▶️  terraform destroy"
-destroy_count=1
-until terraform destroy -auto-approve -input=false -parallelism=4
-do
-  if [ "$destroy_count" -eq "6" ]; then
-    echo "❌  terraform destroy failed (${destroy_count}/5), giving up after five 30-second retries"
-    exit 2
-  else
-    echo "⚠️  terraform destroy failed (${destroy_count}/5), retrying in 30-seconds"
-    sleep 30
-    destroy_count=$[$destroy_count +1]
-  fi
-done
+terraform_destroy
 
 if [ ! "$health_peer_status" = "200" ]
 then
