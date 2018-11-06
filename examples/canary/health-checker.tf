@@ -48,7 +48,7 @@ resource "google_compute_instance" "health" {
   }
 
   network_interface {
-    subnetwork = "${var.google_subnetwork}"
+    subnetwork = "${module.heroku_vpn_gcp.google_subnetwork}"
 
     access_config {
       // This creates an ephemeral public IP
@@ -74,7 +74,7 @@ resource "google_compute_instance" "health" {
 
 resource "google_compute_firewall" "health" {
   name        = "${var.heroku_private_space}-health"
-  network     = "${var.google_network}"
+  network     = "${module.heroku_vpn_gcp.google_network}"
   target_tags = ["http-server"]
 
   # allow {
