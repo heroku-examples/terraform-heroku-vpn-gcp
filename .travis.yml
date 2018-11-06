@@ -24,6 +24,7 @@ env:
     - TF_VAR_heroku_private_space="ci-vpn-gcp-$RANDOM_SUFFIX"
     - TF_VAR_heroku_private_space_region=virginia
     - TF_VAR_google_network="ci-vpn-heroku-$RANDOM_SUFFIX"
+    - TF_VAR_google_subnetwork="ci-vpn-heroku-$RANDOM_SUFFIX"
     - TF_VAR_google_region=us-east4
     - TF_VAR_google_compute_zone=us-east4-a
 
