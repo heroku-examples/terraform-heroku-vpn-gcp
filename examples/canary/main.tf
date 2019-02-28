@@ -1,10 +1,10 @@
 provider "google" {
-  version = "~> 1.19"
+  version = "~> 2.1"
   region  = "${var.google_region}"
 }
 
 provider "heroku" {
-  version = "~> 1.5"
+  version = "~> 1.8"
 }
 
 module "heroku_vpn_gcp" {
