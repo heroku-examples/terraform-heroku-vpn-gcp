@@ -16,7 +16,9 @@ provider "google" {
 }
 
 module "heroku_vpn_gcp" {
-  source = "github.com/heroku-examples/terraform-heroku-vpn-gcp"
+  
+  // example github.com/heroku-examples/terraform-heroku-vpn-gcp
+  source = "../../"
 
   // Google Cloud Platform config
   google_region                          = var.google_region
